@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { LearningPath, Lesson, Problem, Topic } from '../../types';
+import { AlgoCheatSheet } from './AlgoCheatSheet';
 
 interface LearningHubProps {
   onOpenVisualizer: (algo?: any) => void;
@@ -28,6 +29,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({
   onSelectProblem,
 }) => {
   const [selectedPathId, setSelectedPathId] = useState<string>('path-foundation');
+  const [mainMode, setMainMode] = useState<'roadmap' | 'snippets'>('roadmap');
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
@@ -49,8 +51,37 @@ export const LearningHub: React.FC<LearningHubProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* If viewing a lesson detail */}
-      {selectedLesson && selectedTopic ? (
+      {/* Top Switcher Navigation */}
+      <div className="flex items-center justify-between border-b border-[#27272a] pb-4">
+        <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 rounded-xl p-1 text-xs">
+          <button
+            onClick={() => setMainMode('roadmap')}
+            className={`px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 ${
+              mainMode === 'roadmap'
+                ? 'bg-emerald-600 text-white shadow'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Lộ Trình & Chuyên Đề Học
+          </button>
+          <button
+            onClick={() => setMainMode('snippets')}
+            className={`px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 ${
+              mainMode === 'snippets'
+                ? 'bg-emerald-600 text-white shadow'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <Code2 className="w-4 h-4" />
+            Sổ Tay Code Mẫu Chuẩn HSG
+          </button>
+        </div>
+      </div>
+
+      {mainMode === 'snippets' ? (
+        <AlgoCheatSheet />
+      ) : selectedLesson && selectedTopic ? (
         <div className="space-y-6">
           {/* Breadcrumb Header */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-[#18181c] border border-[#27272a] rounded-xl">

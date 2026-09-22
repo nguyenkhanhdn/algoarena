@@ -23,6 +23,9 @@ import {
   XCircle,
   Zap,
   Bot,
+  BookOpen,
+  FileText,
+  X,
 } from 'lucide-react';
 import { judgeService } from '../../services/judgeService';
 import { storageService } from '../../services/storageService';
@@ -30,6 +33,7 @@ import { Problem, Submission, Verdict } from '../../types';
 import { AICoachPanel } from './AICoachPanel';
 import { DiscussionForum } from './DiscussionForum';
 import { StressTestEngine } from './StressTestEngine';
+import { AlgoCheatSheet } from '../learning/AlgoCheatSheet';
 
 interface ProblemSolverProps {
   problem: Problem;
@@ -99,6 +103,8 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({
   const [copiedSample, setCopiedSample] = useState<boolean>(false);
   const [copiedEditorialCode, setCopiedEditorialCode] = useState<boolean>(false);
   const [editorialUnlocked, setEditorialUnlocked] = useState<boolean>(false);
+  const [showSnippetModal, setShowSnippetModal] = useState<boolean>(false);
+  const [freopenNotification, setFreopenNotification] = useState<string | null>(null);
 
   const editorTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -159,6 +165,54 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({
       handleCodeChange(problem.solutionCpp);
     } else {
       handleCodeChange(language === 'python' ? DEFAULT_PYTHON_TEMPLATE : DEFAULT_CPP_TEMPLATE);
+    }
+  };
+
+  const handleInsertFreopen = () => {
+    const fileName =
+      problem.fileIoName ||
+      problem.slug.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6) ||
+      'BAI1';
+
+    if (language === 'cpp') {
+      if (sourceCode.includes('freopen')) {
+        setFreopenNotification('Mã nguồn C++ của bạn đã có cấu hình freopen.');
+        setTimeout(() => setFreopenNotification(null), 3000);
+        return;
+      }
+      const freopenCpp = `    // Cấu hình File I/O theo thể thức thi Học Sinh Giỏi / Tin học trẻ
+    #ifndef ONLINE_JUDGE
+    freopen("${fileName}.INP", "r", stdin);
+    freopen("${fileName}.OUT", "w", stdout);
+    #endif\n`;
+
+      if (sourceCode.includes('cin.tie')) {
+        const updated = sourceCode.replace(/(cin\.tie\(.*?\);)/, `$1\n\n${freopenCpp}`);
+        handleCodeChange(updated);
+      } else if (sourceCode.includes('int main() {')) {
+        const updated = sourceCode.replace('int main() {', `int main() {\n${freopenCpp}`);
+        handleCodeChange(updated);
+      } else {
+        handleCodeChange(`${freopenCpp}\n${sourceCode}`);
+      }
+      setFreopenNotification(`Đã chèn freopen("${fileName}.INP" / "${fileName}.OUT") thành công!`);
+      setTimeout(() => setFreopenNotification(null), 3000);
+    } else {
+      if (sourceCode.includes('open(') && sourceCode.includes('.INP')) {
+        setFreopenNotification('Mã nguồn Python của bạn đã có cấu hình mở file .INP.');
+        setTimeout(() => setFreopenNotification(null), 3000);
+        return;
+      }
+      const freopenPy = `# Đọc ghi file theo thể thức thi Học Sinh Giỏi / Tin học trẻ
+import sys
+try:
+    sys.stdin = open("${fileName}.INP", "r")
+    sys.stdout = open("${fileName}.OUT", "w")
+except FileNotFoundError:
+    pass\n\n`;
+      handleCodeChange(`${freopenPy}${sourceCode}`);
+      setFreopenNotification(`Đã chèn cấu hình đọc ghi file "${fileName}.INP" / "${fileName}.OUT" thành công!`);
+      setTimeout(() => setFreopenNotification(null), 3000);
     }
   };
 
@@ -238,9 +292,26 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({
               {problem.difficulty} • {problem.rating}
             </span>
           </h2>
+
+          {/* Vietnamese Competition File I/O Badge */}
+          <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800/90 border border-zinc-700 text-[11px] font-mono text-zinc-300">
+            <FileText className="w-3.5 h-3.5 text-blue-400" />
+            <span>
+              File: {problem.fileIoName ? `${problem.fileIoName}.INP / .OUT` : 'Standard I/O'}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Quick Snippets & Templates CheatSheet Button */}
+          <button
+            onClick={() => setShowSnippetModal(true)}
+            className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-emerald-400 border border-zinc-700 transition text-xs flex items-center gap-1.5"
+            title="Mở Sổ Tay Thuật Toán & Template Mẫu Chuẩn HSG"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline font-medium">Sổ Tay Mẫu</span>
+          </button>
           <button
             onClick={handleToggleBookmark}
             className={`p-1.5 rounded transition text-xs flex items-center gap-1 border ${
@@ -583,6 +654,14 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({
 
             <div className="flex items-center gap-2">
               <button
+                onClick={handleInsertFreopen}
+                className="px-2 py-1 text-blue-300 bg-blue-950/50 border border-blue-800/70 hover:bg-blue-900/60 rounded transition flex items-center gap-1"
+                title="Chèn cấu hình đọc/ghi file .INP/.OUT cho kỳ thi HSG"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-400" />
+                <span className="hidden sm:inline font-medium">Chèn freopen</span>
+              </button>
+              <button
                 onClick={handleLoadSolution}
                 className="px-2 py-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition flex items-center gap-1"
                 title="Tải lời giải tham khảo vào trình soạn thảo"
@@ -828,6 +907,40 @@ export const ProblemSolver: React.FC<ProblemSolverProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Freopen Toast Notification */}
+      {freopenNotification && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#18181c] border border-blue-600/60 text-blue-200 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <FileText className="w-4 h-4 text-blue-400 shrink-0" />
+          <span>{freopenNotification}</span>
+        </div>
+      )}
+
+      {/* Snippet CheatSheet Modal */}
+      {showSnippetModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-[#121215] border border-zinc-700 w-full max-w-5xl rounded-2xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-base text-zinc-100">
+                  Sổ Tay Thuật Toán & Template Thi Đấu Chuẩn HSG
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSnippetModal(false)}
+                className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pt-4 pr-1">
+              <AlgoCheatSheet />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

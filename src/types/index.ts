@@ -104,6 +104,7 @@ export interface Problem {
   topicTitle: string;
   title: string;
   slug: string;
+  fileIoName?: string;
   difficulty: Difficulty;
   rating: number; // 800 - 2000
   statement: string;

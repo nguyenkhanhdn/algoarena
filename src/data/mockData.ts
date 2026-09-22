@@ -785,6 +785,7 @@ export const mockProblems: Problem[] = [
     topicTitle: 'Tìm kiếm nhị phân',
     title: 'Tìm kiếm phần tử trên mảng đã sắp xếp',
     slug: 'tim-kiem-phan-tu-tren-mang-da-sap-xep',
+    fileIoName: 'TIMSO',
     difficulty: 'EASY',
     rating: 900,
     statement: `Cho một dãy số nguyên $A$ gồm $N$ phần tử đã được sắp xếp tăng dần và một số nguyên $X$.
@@ -934,6 +935,7 @@ if __name__ == "__main__":
     topicTitle: 'Mảng cộng dồn',
     title: 'Tổng đoạn con liên tiếp',
     slug: 'tong-doan-con-lien-tiep',
+    fileIoName: 'TONGDOAN',
     difficulty: 'BEGINNER',
     rating: 800,
     statement: `Cho dãy số nguyên $A$ gồm $N$ phần tử và $Q$ truy vấn.
@@ -1001,6 +1003,7 @@ if __name__ == "__main__":
     topicTitle: 'Duyệt đồ thị: BFS & DFS',
     title: 'Mê cung thoát hiểm (Grid Shortest Path)',
     slug: 'me-cung-thoat-hiem-bfs',
+    fileIoName: 'MECUNG',
     difficulty: 'MEDIUM',
     rating: 1300,
     statement: `Bạn đang ở vị trí xuất phát $(1, 1)$ trong một mê cung kích thước $R \\times C$.
