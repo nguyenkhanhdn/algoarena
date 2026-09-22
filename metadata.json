@@ -1,0 +1,6 @@
+{
+  "name": "AlgoArena Vietnam",
+  "description": "Nền tảng luyện thi Học sinh Giỏi Tin học & Tin học trẻ Bảng B dành cho học sinh THCS/THPT Việt Nam",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
