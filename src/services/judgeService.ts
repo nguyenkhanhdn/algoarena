@@ -332,6 +332,56 @@ export class SandboxedJudgeService implements IJudgeService {
     if (problem.topicId === 'topic-dsu') {
       return trimmed.includes('parent') || trimmed.includes('find') || trimmed.includes('union');
     }
+    if (problem.topicId === 'topic-strings') {
+      return (
+        trimmed.includes('palin') ||
+        trimmed.includes('alnum') ||
+        trimmed.includes('lower') ||
+        trimmed.includes('string') ||
+        trimmed.includes('str') ||
+        trimmed.includes('char')
+      );
+    }
+    if (problem.topicId === 'topic-math') {
+      return (
+        trimmed.includes('factor') ||
+        trimmed.includes('prime') ||
+        trimmed.includes('gcd') ||
+        trimmed.includes('pow') ||
+        trimmed.includes('%') ||
+        trimmed.includes('modulo') ||
+        trimmed.includes('sieve')
+      );
+    }
+    if (problem.topicId === 'topic-functions') {
+      return (
+        trimmed.includes('is_prime') ||
+        trimmed.includes('isprime') ||
+        trimmed.includes('def ') ||
+        trimmed.includes('bool ') ||
+        trimmed.includes('return')
+      );
+    }
+    if (problem.topicId === 'topic-recursion') {
+      return (
+        trimmed.includes('hanoi') ||
+        trimmed.includes('solve') ||
+        trimmed.includes('dest') ||
+        trimmed.includes('aux') ||
+        trimmed.includes('fib') ||
+        trimmed.includes('recursive')
+      );
+    }
+    if (problem.topicId === 'topic-backtracking') {
+      return (
+        trimmed.includes('backtrack') ||
+        trimmed.includes('queen') ||
+        trimmed.includes('col') ||
+        trimmed.includes('diag') ||
+        trimmed.includes('try') ||
+        trimmed.includes('dfs')
+      );
+    }
     if (problem.topicId === 'topic-segment-tree') {
       return trimmed.includes('tree') || trimmed.includes('build') || trimmed.includes('query');
     }

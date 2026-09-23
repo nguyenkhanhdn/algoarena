@@ -9,6 +9,11 @@ import {
   mockUsers,
 } from '../data/mockData';
 import {
+  supplementaryLessons,
+  supplementaryProblems,
+  supplementaryTopics,
+} from '../data/supplementaryData';
+import {
   Achievement,
   Assignment,
   AssignmentSubmission,
@@ -24,7 +29,7 @@ import {
   User,
 } from '../types';
 
-const STORAGE_KEY_PREFIX = 'algoarena_v1_';
+const STORAGE_KEY_PREFIX = 'algoarena_v2_';
 
 class StorageService {
   private users: User[] = [];
@@ -50,12 +55,16 @@ class StorageService {
   private initializeData() {
     // Load or set initial users
     this.users = this.loadFromStorage('users', mockUsers);
-    this.learningPaths = this.loadFromStorage('paths', mockLearningPaths);
-    this.topics = this.loadFromStorage('topics', mockTopics);
-    this.lessons = this.loadFromStorage('lessons', mockLessons);
 
-    const allProblems = [...mockProblems, ...extraProblems];
-    this.problems = this.loadFromStorage('problems', allProblems);
+    // Merge default paths, topics, lessons, problems
+    const allTopics = [...mockTopics, ...supplementaryTopics];
+    const allLessons = [...mockLessons, ...supplementaryLessons];
+    const allProblems = [...mockProblems, ...extraProblems, ...supplementaryProblems];
+
+    this.learningPaths = this.loadFromStorage('paths', mockLearningPaths);
+    this.topics = this.mergeById(this.loadFromStorage('topics', allTopics), allTopics);
+    this.lessons = this.mergeById(this.loadFromStorage('lessons', allLessons), allLessons);
+    this.problems = this.mergeById(this.loadFromStorage('problems', allProblems), allProblems);
     this.contests = this.loadFromStorage('contests', mockContests);
     this.achievements = this.loadFromStorage('achievements', mockAchievements);
 
@@ -262,6 +271,13 @@ def binary_search(arr, x):
       'prob-valid-parentheses',
     ]);
     this.solvedProblemIds = new Set(savedSolvedProblems);
+  }
+
+  private mergeById<T extends { id: string }>(stored: T[], defaults: T[]): T[] {
+    const map = new Map<string, T>();
+    defaults.forEach((item) => map.set(item.id, item));
+    stored.forEach((item) => map.set(item.id, item));
+    return Array.from(map.values());
   }
 
   private loadFromStorage<T>(key: string, defaultVal: T): T {

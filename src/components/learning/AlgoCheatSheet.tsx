@@ -370,6 +370,321 @@ def longest_increasing_subsequence(arr: list) -> int:
             tails[idx] = x
     return len(tails)`,
   },
+  {
+    id: 'string-processing-clean',
+    category: 'Chuỗi & Xâu ký tự',
+    title: 'Xử Lý Chuỗi: Đếm Tần Suất Ký Tự & Kiểm Tra Palindrome Hai Con Trỏ',
+    description:
+      'Các thao tác cốt lõi trên xâu ký tự: đếm tần số ký tự với mảng đếm bảng mã ASCII cnt[26], chuẩn hóa xâu họ tên, và kiểm tra tính chất đối xứng hai đầu trong O(N).',
+    timeComplexity: 'O(N)',
+    spaceComplexity: 'O(1) bộ nhớ phụ',
+    pitfalls: [
+      'Không dùng toán tử s = s + ch trong vòng lặp Python vì mỗi lần nối xâu tạo một bản sao mới tốn O(N^2), luôn dùng list và "".join().',
+      'Cẩn thận với chỉ số âm hoặc truy cập vượt độ dài xâu s.length().',
+      'Khi chuyển ký tự hoa thường trong C++, dùng tolower((unsigned char)c) để tránh undefined behavior.',
+    ],
+    tags: ['Strings', 'Palindrome', 'ASCII', 'Two Pointers'],
+    cppCode: `// Xử lý chuỗi và kiểm tra xâu đối xứng bỏ qua ký tự đặc biệt
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cctype>
+
+using namespace std;
+
+// Đếm tần suất chữ cái tiếng Anh 'a'..'z' trong O(N)
+vector<int> countFrequency(const string& s) {
+    vector<int> freq(26, 0);
+    for (char c : s) {
+        if (isalpha(c)) {
+            freq[tolower(c) - 'a']++;
+        }
+    }
+    return freq;
+}
+
+// Kiểm tra xâu đối xứng bằng 2 con trỏ O(N) thời gian, O(1) bộ nhớ
+bool isPalindromeClean(const string& s) {
+    int l = 0, r = (int)s.length() - 1;
+    while (l < r) {
+        while (l < r && !isalnum(s[l])) l++;
+        while (l < r && !isalnum(s[r])) r--;
+        if (tolower(s[l]) != tolower(s[r])) return false;
+        l++;
+        r--;
+    }
+    return true;
+}`,
+    pythonCode: `# Template Xử lý Chuỗi & Palindrome trong Python 3
+def count_frequency(s: str) -> dict:
+    freq = {}
+    for ch in s:
+        if ch.isalpha():
+            c = ch.lower()
+            freq[c] = freq.get(c, 0) + 1
+    return freq
+
+def is_palindrome_clean(s: str) -> bool:
+    # Lọc ký tự chữ số và đưa về chữ thường
+    filtered = [ch.lower() for ch in s if ch.isalnum()]
+    l, r = 0, len(filtered) - 1
+    while l < r:
+        if filtered[l] != filtered[r]:
+            return False
+        l += 1
+        r -= 1
+    return True
+
+def normalize_name(s: str) -> str:
+    # Chuẩn hóa họ tên: xóa khoảng trắng thừa, viết hoa chữ cái đầu
+    return " ".join(word.capitalize() for word in s.strip().split())`,
+  },
+  {
+    id: 'math-modular-power-gcd',
+    category: 'Số học & Toán học',
+    title: 'Lũy Thừa Nhị Phân & Ước Chung Lớn Nhất (GCD & Binary Exponentiation)',
+    description:
+      'Tính (A^B) % M với B lên tới 10^18 trong O(log B) phép tính và tìm ƯCLN bằng thuật toán Euclid kinh điển.',
+    timeComplexity: 'Lũy thừa O(log B), GCD O(log min(A, B))',
+    spaceComplexity: 'O(1)',
+    pitfalls: [
+      'Tràn số khi nhân hai số 64-bit trước khi mod; trong C++ có thể dùng __int128 để nhân an toàn.',
+      'Trường hợp B = 0 thì A^0 % M = 1 % M (chú ý khi M = 1 thì kết quả là 0).',
+    ],
+    tags: ['Math', 'GCD', 'Modular Exponentiation', 'Số học'],
+    cppCode: `// Lũy thừa nhị phân A^B % M với độ phức tạp O(log B)
+long long powerMod(long long a, long long b, long long m) {
+    long long res = 1 % m;
+    a %= m;
+    while (b > 0) {
+        if (b & 1) res = (long long)((__int128)res * a % m);
+        a = (long long)((__int128)a * a % m);
+        b >>= 1;
+    }
+    return res;
+}
+
+// Thuật toán Euclid tìm ƯCLN trong O(log min(A, B))
+long long gcd(long long a, long long b) {
+    while (b != 0) {
+        long long r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
+}
+
+// BCNN: Chia trước để tránh tràn số tích a * b
+long long lcm(long long a, long long b) {
+    if (a == 0 || b == 0) return 0;
+    return (a / gcd(a, b)) * b;
+}`,
+    pythonCode: `# Template Lũy thừa nhị phân và GCD chuẩn trong Python 3
+def power_mod(a: int, b: int, m: int) -> int:
+    res = 1 % m
+    a %= m
+    while b > 0:
+        if b % 2 == 1:
+            res = (res * a) % m
+        a = (a * a) % m
+        b //= 2
+    return res
+
+def gcd(a: int, b: int) -> int:
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a: int, b: int) -> int:
+    if a == 0 or b == 0:
+        return 0
+    return (a // gcd(a, b)) * b`,
+  },
+  {
+    id: 'functions-modular-design',
+    category: 'Hàm & Thiết kế',
+    title: 'Thiết Kế Hàm Thủ Tục & Truyền Tham Chiếu (Pass by Reference)',
+    description:
+      'Quy chuẩn thiết kế hàm con trong kỳ thi: dùng const reference để loại bỏ nguy cơ TLE do sao chép mảng, viết hàm kiểm tra predicate sạch sẽ.',
+    timeComplexity: 'O(1) gọi hàm',
+    spaceComplexity: 'O(1)',
+    pitfalls: [
+      'Quên dấu & khi truyền vector<int> a làm hàm sao chép toàn bộ mảng O(N), nếu gọi trong vòng lặp sẽ bị TLE.',
+      'Tránh lạm dụng biến toàn cục làm sai lệch giá trị khi hàm được gọi nhiều lần.',
+    ],
+    tags: ['Functions', 'Pass by Reference', 'Clean Code', 'Templates'],
+    cppCode: `// Template Thiết kế hàm sạch sẽ chuẩn thi đấu
+#include <vector>
+#include <iostream>
+
+using namespace std;
+
+// Hàm kiểm tra số nguyên tố: O(sqrt(N))
+bool isPrime(long long n) {
+    if (n < 2) return false;
+    for (long long d = 2; d * d <= n; d++) {
+        if (n % d == 0) return false;
+    }
+    return true;
+}
+
+// BẮT BUỘC: Dùng const vector<T>& để O(1) con trỏ, không copy mảng
+long long computeSum(const vector<int>& a) {
+    long long total = 0;
+    for (int x : a) total += x;
+    return total;
+}
+
+// Hàm Predicate dùng trong Chặt nhị phân kết quả
+bool checkCondition(long long mid, const vector<int>& a, int targetK) {
+    int count = 0;
+    for (int x : a) {
+        count += x / mid;
+    }
+    return count >= targetK;
+}`,
+    pythonCode: `# Thiết kế hàm con & Scope biến trong Python
+def is_prime(n: int) -> bool:
+    if n < 2:
+        return False
+    d = 2
+    while d * d <= n:
+        if n % d == 0:
+            return False
+        d += 1
+    return True
+
+# Hàm kiểm tra điều kiện (Predicate) cho Chặt nhị phân
+def check_condition(mid: int, arr: list, target_k: int) -> bool:
+    if mid == 0:
+        return False
+    return sum(x // mid for x in arr) >= target_k`,
+  },
+  {
+    id: 'recursion-tower-hanoi',
+    category: 'Đệ quy',
+    title: 'Tư Duy Đệ Quy & Bài Toán Tháp Hà Nội (Tower of Hanoi)',
+    description:
+      'Khung hàm đệ quy tổng quát: xác định trường hợp cơ sở (Base Case) và bước đệ quy (Recursive Step), giải bài toán Tháp Hà Nội trong 2^N - 1 bước.',
+    timeComplexity: 'O(2^N)',
+    spaceComplexity: 'O(N) độ sâu ngăn xếp gọi hàm',
+    pitfalls: [
+      'Thiếu Base Case sẽ gây vòng lặp đệ quy vô hạn dẫn tới lỗi tràn ngăn xếp (Stack Overflow).',
+      'Trong Python cần tăng sys.setrecursionlimit() nếu bài toán đệ quy sâu quá 1000 bước.',
+    ],
+    tags: ['Recursion', 'Hanoi', 'Divide & Conquer', 'Call Stack'],
+    cppCode: `// Khung đệ quy Tháp Hà Nội chuyển N đĩa từ cọc A sang cọc C
+#include <iostream>
+
+using namespace std;
+
+void hanoi(int n, char src, char dest, char aux) {
+    // 1. Trường hợp cơ sở (Base Case)
+    if (n == 1) {
+        cout << src << " -> " << dest << "\\n";
+        return;
+    }
+    
+    // 2. Bước đệ quy 1: Chuyển n-1 đĩa từ src sang aux
+    hanoi(n - 1, src, aux, dest);
+    
+    // 3. Chuyển đĩa lớn nhất từ src sang dest
+    cout << src << " -> " << dest << "\\n";
+    
+    // 4. Bước đệ quy 2: Chuyển n-1 đĩa từ aux sang dest
+    hanoi(n - 1, aux, dest, src);
+}
+
+int main() {
+    int n = 3;
+    cout << "Tổng số bước tối thiểu: " << (1 << n) - 1 << "\\n";
+    hanoi(n, 'A', 'C', 'B');
+    return 0;
+}`,
+    pythonCode: `# Template Đệ quy Tháp Hà Nội trong Python 3
+def solve_hanoi(n: int, src: str, dest: str, aux: str):
+    if n == 1:
+        print(f"{src} -> {dest}")
+        return
+    solve_hanoi(n - 1, src, aux, dest)
+    print(f"{src} -> {dest}")
+    solve_hanoi(n - 1, aux, dest, src)
+
+# Số bước luôn là 2^n - 1`,
+  },
+  {
+    id: 'backtracking-try-framework',
+    category: 'Vét cạn & Quay lui',
+    title: 'Khung Thuật Toán Quay Lui Chuẩn Try(i) & Bài Toán N Quân Hậu',
+    description:
+      'Mô hình quay lui kinh điển của giáo trình Chuyên Tin Việt Nam: Thử chọn giá trị -> Ghi nhận -> Gọi Try(i+1) -> Hoàn tác (Backtrack). Áp dụng cho sinh hoán vị và xếp N quân hậu.',
+    timeComplexity: 'Sinh nhị phân O(2^N), Hoán vị O(N!)',
+    spaceComplexity: 'O(N) lưu trạng thái và mảng đánh dấu',
+    pitfalls: [
+      'BẮT BUỘC hoàn tác lại mảng đánh dấu used[] sau khi đệ quy xong để tránh sai lệch nhánh tiếp theo.',
+      'Đường chéo trong bàn cờ NxN: đường chéo chính (row - col + N), đường chéo phụ (row + col).',
+    ],
+    tags: ['Backtracking', 'Quay lui', 'Try(i)', 'Vét cạn', 'N-Queens'],
+    cppCode: `// Khung thuật toán Quay lui Try(i) giải N Quân Hậu
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int n = 8;
+int totalSolutions = 0;
+bool colUsed[30], diagMain[60], diagSub[60];
+
+void Try(int row) {
+    for (int col = 0; col < n; col++) {
+        // Kiểm tra xem vị trí (row, col) có an toàn không
+        if (!colUsed[col] && !diagMain[row - col + n] && !diagSub[row + col]) {
+            // 1. Thử chọn & ghi nhận
+            colUsed[col] = diagMain[row - col + n] = diagSub[row + col] = true;
+            
+            if (row == n - 1) {
+                totalSolutions++; // Tìm thấy 1 cấu hình hợp lệ
+            } else {
+                Try(row + 1);    // 2. Xét tiếp hàng tiếp theo
+            }
+            
+            // 3. Hoàn tác trạng thái (Backtrack)
+            colUsed[col] = diagMain[row - col + n] = diagSub[row + col] = false;
+        }
+    }
+}
+
+int main() {
+    Try(0);
+    cout << "Số cách xếp: " << totalSolutions << "\\n";
+    return 0;
+}`,
+    pythonCode: `# Template Quay lui Try(i) trong Python 3
+def solve_n_queens(n: int) -> int:
+    col_used = [False] * n
+    diag_main = [False] * (2 * n)
+    diag_sub = [False] * (2 * n)
+    count = 0
+    
+    def backtrack(row):
+        nonlocal count
+        if row == n:
+            count += 1
+            return
+        for col in range(n):
+            d1 = row - col + n
+            d2 = row + col
+            if not col_used[col] and not diag_main[d1] and not diag_sub[d2]:
+                # 1. Thử chọn
+                col_used[col] = diag_main[d1] = diag_sub[d2] = True
+                # 2. Đệ quy
+                backtrack(row + 1)
+                # 3. Hoàn tác
+                col_used[col] = diag_main[d1] = diag_sub[d2] = False
+                
+    backtrack(0)
+    return count`,
+  },
 ];
 
 export const AlgoCheatSheet: React.FC = () => {

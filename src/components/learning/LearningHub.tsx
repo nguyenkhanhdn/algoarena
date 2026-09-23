@@ -28,7 +28,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({
   onOpenVisualizer,
   onSelectProblem,
 }) => {
-  const [selectedPathId, setSelectedPathId] = useState<string>('path-foundation');
+  const [selectedPathId, setSelectedPathId] = useState<string>('path-1');
   const [mainMode, setMainMode] = useState<'roadmap' | 'snippets'>('roadmap');
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
@@ -38,7 +38,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({
   const allTopics = storageService.getTopics();
 
   const currentPath = paths.find((p) => p.id === selectedPathId) || paths[0];
-  const currentPathTopics = allTopics.filter((t) => t.pathId === selectedPathId);
+  const currentPathTopics = allTopics.filter((t) => t.pathId === (currentPath ? currentPath.id : selectedPathId));
 
   // When a topic is selected, fetch its lessons
   const topicLessons = selectedTopic ? storageService.getLessonsByTopic(selectedTopic.id) : [];
