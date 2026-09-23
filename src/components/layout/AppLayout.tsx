@@ -8,7 +8,9 @@ import {
   Cpu,
   Flame,
   GraduationCap,
+  KeyRound,
   LayoutDashboard,
+  LineChart,
   LogOut,
   Menu,
   Shield,
@@ -17,16 +19,19 @@ import {
   Trophy,
   User as UserIcon,
   UserCheck,
+  UserPlus,
   X,
   Zap,
 } from 'lucide-react';
 import { storageService } from '../../services/storageService';
 import { Role, User } from '../../types';
+import { AuthModal } from '../auth/AuthModal';
 
 export type ActiveNavTab =
   | 'dashboard'
   | 'learning'
   | 'problems'
+  | 'progress'
   | 'visualizer'
   | 'contests'
   | 'bookmarks'
@@ -48,6 +53,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isRoleMenuOpen, setIsRoleMenuOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   const currentUser = storageService.getCurrentUser();
   const allUsers = storageService.getAllUsers();
@@ -63,10 +70,24 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     onRoleChanged();
   };
 
+  const handleOpenAuth = (mode: 'login' | 'register') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+    setIsRoleMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    storageService.logout();
+    setIsRoleMenuOpen(false);
+    onRoleChanged();
+    onSelectTab('dashboard');
+  };
+
   const navItems = [
     { id: 'dashboard', label: 'Bảng tin', icon: LayoutDashboard },
     { id: 'learning', label: 'Lộ trình học', icon: BookOpen },
     { id: 'problems', label: 'Ngân hàng bài', icon: Terminal },
+    { id: 'progress', label: 'Tiến độ học', icon: LineChart },
     { id: 'visualizer', label: 'Visualizer', icon: Cpu, isHighlight: true },
     { id: 'contests', label: 'Thi thử', icon: Trophy },
     { id: 'bookmarks', label: 'Sổ tay', icon: Bookmark },
@@ -230,7 +251,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   </button>
                 </div>
 
-                <div className="pt-2 mt-1 border-t border-zinc-800">
+                <div className="pt-2 mt-1 border-t border-zinc-800 space-y-1">
+                  <button
+                    onClick={() => {
+                      setIsRoleMenuOpen(false);
+                      onSelectTab('progress');
+                    }}
+                    className="w-full text-left p-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 text-blue-400 font-semibold transition text-xs"
+                  >
+                    <LineChart className="w-4 h-4" />
+                    <span>Theo Dõi Tiến Độ Luyện Thi</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setIsRoleMenuOpen(false);
@@ -241,9 +273,53 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                     <UserIcon className="w-4 h-4" />
                     <span>Xem Hồ Sơ & Bảng Năng Lực</span>
                   </button>
+
+                  <div className="pt-1 border-t border-zinc-800/60 my-1" />
+
+                  <button
+                    onClick={() => handleOpenAuth('login')}
+                    className="w-full text-left p-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 text-zinc-300 transition text-xs"
+                  >
+                    <KeyRound className="w-4 h-4 text-emerald-400" />
+                    <span>Đăng Nhập Tài Khoản Khác</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleOpenAuth('register')}
+                    className="w-full text-left p-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 text-zinc-300 transition text-xs"
+                  >
+                    <UserPlus className="w-4 h-4 text-blue-400" />
+                    <span>Đăng Ký Học Sinh Mới</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left p-2 rounded-lg flex items-center gap-2 hover:bg-rose-950/40 text-rose-400 transition text-xs"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Đăng Xuất</span>
+                  </button>
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Quick Auth Trigger Buttons for convenience */}
+          <div className="hidden sm:flex items-center gap-1.5">
+            <button
+              onClick={() => handleOpenAuth('login')}
+              className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg transition border border-zinc-700 flex items-center gap-1.5"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Đăng nhập</span>
+            </button>
+            <button
+              onClick={() => handleOpenAuth('register')}
+              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition shadow-sm flex items-center gap-1.5"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Đăng ký</span>
+            </button>
           </div>
 
           {/* Mobile Menu Toggle Button */}
@@ -255,6 +331,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Auth Modal Popup */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={() => {
+          onRoleChanged();
+          onSelectTab('progress');
+        }}
+        initialMode={authModalMode}
+      />
 
       {/* Mobile Nav Dropdown */}
       {isMobileMenuOpen && (

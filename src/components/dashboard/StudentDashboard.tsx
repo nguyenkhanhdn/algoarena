@@ -22,7 +22,7 @@ import { storageService } from '../../services/storageService';
 import { Assignment, Problem, User } from '../../types';
 
 interface StudentDashboardProps {
-  onNavigate: (view: 'learning' | 'problems' | 'contests' | 'visualizer' | 'bookmarks') => void;
+  onNavigate: (view: 'learning' | 'problems' | 'contests' | 'visualizer' | 'bookmarks' | 'progress' | 'profile') => void;
   onSelectProblem: (problem: Problem) => void;
 }
 
@@ -67,6 +67,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <p className="text-zinc-400 text-xs sm:text-sm mt-1 max-w-xl">
               Chào mừng bạn trở lại với đấu trường thuật toán AlgoArena. Hãy hoàn thành mục tiêu luyện thi hôm nay để giữ vững chuỗi phong độ!
             </p>
+            <div className="flex items-center gap-2 mt-3">
+              <button
+                onClick={() => onNavigate('progress')}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-950"
+              >
+                <LineChart className="w-3.5 h-3.5" />
+                <span>Theo dõi tiến độ học tập</span>
+              </button>
+              <button
+                onClick={() => onNavigate('learning')}
+                className="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700 flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Lộ trình chuyên đề</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Stats Pill */}

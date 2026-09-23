@@ -298,16 +298,147 @@ def binary_search(arr, x):
     }
   }
 
-  // --- Users & Roles ---
+  // --- Users, Auth & Roles ---
   getCurrentUser(): User {
     const user = this.users.find((u) => u.id === this.currentUserId) || this.users[0];
     return user;
+  }
+
+  setCurrentUser(userId: string) {
+    const user = this.users.find((u) => u.id === userId);
+    if (user) {
+      this.currentUserId = user.id;
+      this.saveToStorage('current_user_id', user.id);
+    }
+  }
+
+  login(
+    usernameOrEmail: string,
+    password?: string
+  ): { success: boolean; message: string; user?: User } {
+    const trimmed = usernameOrEmail.trim().toLowerCase();
+    const found = this.users.find(
+      (u) =>
+        u.username.toLowerCase() === trimmed ||
+        u.email.toLowerCase() === trimmed
+    );
+
+    if (!found) {
+      return {
+        success: false,
+        message: 'Tài khoản hoặc email không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc Đăng ký.',
+      };
+    }
+
+    // If password provided and user has password, check match (or allow demo default)
+    if (password && found.password && found.password !== password) {
+      return {
+        success: false,
+        message: 'Mật khẩu không chính xác. Mật khẩu mặc định tài khoản mẫu là "123456".',
+      };
+    }
+
+    this.currentUserId = found.id;
+    this.saveToStorage('current_user_id', found.id);
+
+    return {
+      success: true,
+      message: `Đăng nhập thành công! Chào mừng ${found.fullName} trở lại AlgoArena.`,
+      user: found,
+    };
+  }
+
+  register(data: {
+    username: string;
+    email: string;
+    fullName: string;
+    password: string;
+    role?: Role;
+    studentData?: {
+      school: string;
+      className: string;
+      province: string;
+      grade: number;
+      target: string;
+    };
+  }): { success: boolean; message: string; user?: User } {
+    const usernameClean = data.username.trim();
+    const emailClean = data.email.trim().toLowerCase();
+
+    // Check duplicate username or email
+    const exists = this.users.some(
+      (u) =>
+        u.username.toLowerCase() === usernameClean.toLowerCase() ||
+        u.email.toLowerCase() === emailClean
+    );
+
+    if (exists) {
+      return {
+        success: false,
+        message: 'Tên đăng nhập hoặc Email đã tồn tại. Vui lòng chọn tên khác.',
+      };
+    }
+
+    const newId = `user-student-${Date.now()}`;
+    const avatarList = [
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    ];
+    const randomAvatar = avatarList[Math.floor(Math.random() * avatarList.length)];
+
+    const newUser: User = {
+      id: newId,
+      username: usernameClean,
+      email: emailClean,
+      password: data.password,
+      fullName: data.fullName.trim(),
+      avatar: randomAvatar,
+      role: data.role || 'STUDENT',
+      studentProfile: {
+        school: data.studentData?.school || 'THPT Chuyên',
+        className: data.studentData?.className || '10 Tin',
+        province: data.studentData?.province || 'Hà Nội',
+        grade: data.studentData?.grade || 10,
+        target: data.studentData?.target || 'Tin học trẻ Bảng B & HSG Tỉnh',
+        rating: 1200,
+        currentStreak: 1,
+        longestStreak: 1,
+        problemsSolved: 0,
+        totalSubmissions: 0,
+        weakTopics: ['Đồ thị', 'Quy hoạch động'],
+        strongTopics: ['Cú pháp cơ bản'],
+        joinedDate: new Date().toISOString().split('T')[0],
+      },
+    };
+
+    this.users.unshift(newUser);
+    this.saveToStorage('users', this.users);
+
+    this.currentUserId = newUser.id;
+    this.saveToStorage('current_user_id', newUser.id);
+
+    return {
+      success: true,
+      message: `Đăng ký thành công! Chào mừng ${newUser.fullName} tham gia cộng đồng AlgoArena.`,
+      user: newUser,
+    };
+  }
+
+  logout(): void {
+    // Switch to first student default
+    if (this.users.length > 0) {
+      this.currentUserId = this.users[0].id;
+      this.saveToStorage('current_user_id', this.users[0].id);
+    }
   }
 
   switchRole(role: Role) {
     const user = this.users.find((u) => u.role === role);
     if (user) {
       this.currentUserId = user.id;
+      this.saveToStorage('current_user_id', user.id);
     }
   }
 
@@ -321,6 +452,149 @@ def binary_search(arr, x):
       user.studentProfile = { ...user.studentProfile, ...profileUpdate };
       this.saveToStorage('users', this.users);
     }
+  }
+
+  // --- Detailed Student Learning & Exam Practice Analytics ---
+  getUserLearningProgress(targetUserId?: string) {
+    const user = targetUserId ? (this.users.find((u) => u.id === targetUserId) || this.getCurrentUser()) : this.getCurrentUser();
+    const userSubmissions = this.submissions.filter((s) => s.userId === user.id);
+
+    const totalLessons = this.lessons.length;
+    const completedLessons = Array.from(this.completedLessonIds);
+    const completedLessonsCount = completedLessons.length;
+    const lessonCompletionRate = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
+
+    const totalProblems = this.problems.length;
+    // Solved problems by this user
+    const solvedProblemIds = new Set<string>();
+    userSubmissions.forEach((s) => {
+      if (s.verdict === 'ACCEPTED') solvedProblemIds.add(s.problemId);
+    });
+    // Add default solved if student 1
+    if (user.id === 'user-student-1') {
+      this.solvedProblemIds.forEach((id) => solvedProblemIds.add(id));
+    }
+    const solvedProblemsCount = solvedProblemIds.size;
+    const problemSolvingRate = totalProblems > 0 ? Math.round((solvedProblemsCount / totalProblems) * 100) : 0;
+
+    // By Difficulty
+    const solvedByDifficulty = {
+      BEGINNER: 0,
+      EASY: 0,
+      MEDIUM: 0,
+      HARD: 0,
+      EXPERT: 0,
+    };
+    this.problems.forEach((p) => {
+      if (solvedProblemIds.has(p.id)) {
+        if (solvedByDifficulty[p.difficulty] !== undefined) {
+          solvedByDifficulty[p.difficulty]++;
+        }
+      }
+    });
+
+    // By Learning Path
+    const pathProgress = this.learningPaths.map((path) => {
+      const pathTopics = this.topics.filter((t) => t.pathId === path.id);
+      const pathTopicIds = new Set(pathTopics.map((t) => t.id));
+      const pathLessons = this.lessons.filter((l) => pathTopicIds.has(l.topicId));
+      const pathProblems = this.problems.filter((p) => pathTopicIds.has(p.topicId));
+
+      const doneLessons = pathLessons.filter((l) => this.completedLessonIds.has(l.id)).length;
+      const solvedProblems = pathProblems.filter((p) => solvedProblemIds.has(p.id)).length;
+
+      const totalItems = pathLessons.length + pathProblems.length;
+      const doneItems = doneLessons + solvedProblems;
+      const percent = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+
+      return {
+        path,
+        totalLessons: pathLessons.length,
+        doneLessons,
+        totalProblems: pathProblems.length,
+        solvedProblems,
+        percent,
+      };
+    });
+
+    // By Topic Detail
+    const topicProgress = this.topics.map((t) => {
+      const topicLessonsList = this.lessons.filter((l) => l.topicId === t.id);
+      const topicProblemsList = this.problems.filter((p) => p.topicId === t.id);
+
+      const doneLessons = topicLessonsList.filter((l) => this.completedLessonIds.has(l.id)).length;
+      const solvedProblems = topicProblemsList.filter((p) => solvedProblemIds.has(p.id)).length;
+
+      const total = topicLessonsList.length + topicProblemsList.length;
+      const done = doneLessons + solvedProblems;
+      const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      let status: 'MASTERED' | 'IN_PROGRESS' | 'NOT_STARTED' = 'NOT_STARTED';
+      if (percent >= 80) status = 'MASTERED';
+      else if (percent > 0) status = 'IN_PROGRESS';
+
+      return {
+        topic: t,
+        totalLessons: topicLessonsList.length,
+        doneLessons,
+        totalProblems: topicProblemsList.length,
+        solvedProblems,
+        percent,
+        status,
+      };
+    });
+
+    // Submissions Breakdown
+    const verdictCounts: Record<string, number> = {
+      ACCEPTED: 0,
+      WRONG_ANSWER: 0,
+      TIME_LIMIT_EXCEEDED: 0,
+      MEMORY_LIMIT_EXCEEDED: 0,
+      RUNTIME_ERROR: 0,
+      COMPILATION_ERROR: 0,
+    };
+    userSubmissions.forEach((s) => {
+      if (verdictCounts[s.verdict] !== undefined) {
+        verdictCounts[s.verdict]++;
+      }
+    });
+
+    // Language Usage
+    const langCounts = {
+      cpp: userSubmissions.filter((s) => s.language === 'cpp').length,
+      python: userSubmissions.filter((s) => s.language === 'python').length,
+    };
+
+    // Exam Readiness Index (0 - 100%)
+    const userRating = user.studentProfile?.rating || 1200;
+    const readinessIndex = Math.min(
+      100,
+      Math.round(
+        (Math.min(userRating, 1600) / 1600) * 50 +
+        (Math.min(solvedProblemsCount, 30) / 30) * 35 +
+        (Math.min(completedLessonsCount, 15) / 15) * 15
+      )
+    );
+
+    return {
+      user,
+      totalLessons,
+      completedLessonsCount,
+      lessonCompletionRate,
+      totalProblems,
+      solvedProblemsCount,
+      problemSolvingRate,
+      solvedByDifficulty,
+      pathProgress,
+      topicProgress,
+      verdictCounts,
+      totalSubmissions: userSubmissions.length,
+      langCounts,
+      readinessIndex,
+      currentStreak: user.studentProfile?.currentStreak || 1,
+      rating: userRating,
+      targetContest: user.studentProfile?.target || 'HSG Tỉnh Bảng A & Tin học trẻ Bảng B',
+    };
   }
 
   // --- Learning Paths, Topics, Lessons ---

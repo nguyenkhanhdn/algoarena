@@ -7,6 +7,7 @@ import { LearningHub } from './components/learning/LearningHub';
 import { ProblemList } from './components/problems/ProblemList';
 import { ProblemSolver } from './components/problems/ProblemSolver';
 import { ProfileHub } from './components/profile/ProfileHub';
+import { ProgressTracker } from './components/progress/ProgressTracker';
 import { TeacherDashboard } from './components/teacher/TeacherDashboard';
 import { AlgorithmVisualizer, VisualizerAlgorithm } from './components/visualizer/AlgorithmVisualizer';
 import { Problem } from './types';
@@ -71,6 +72,15 @@ export default function App() {
         <ProblemList onSelectProblem={handleSelectProblem} />
       )}
 
+      {currentTab === 'progress' && (
+        <ProgressTracker
+          onSelectProblem={handleSelectProblem}
+          onNavigateToLearning={() => setCurrentTab('learning')}
+          onNavigateToProblems={() => setCurrentTab('problems')}
+          onNavigateToContests={() => setCurrentTab('contests')}
+        />
+      )}
+
       {currentTab === 'visualizer' && (
         <AlgorithmVisualizer
           initialAlgorithm={visualizerAlgorithm}
@@ -92,6 +102,7 @@ export default function App() {
       {currentTab === 'profile' && (
         <ProfileHub
           onNavigateToProblems={() => setCurrentTab('problems')}
+          onNavigateToProgress={() => setCurrentTab('progress')}
           onSelectProblem={handleSelectProblem}
         />
       )}

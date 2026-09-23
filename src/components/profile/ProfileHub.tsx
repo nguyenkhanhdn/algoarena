@@ -34,12 +34,14 @@ interface ProfileHubProps {
   onSelectProblem: (problem: Problem) => void;
   onNavigateToContests?: () => void;
   onNavigateToProblems?: () => void;
+  onNavigateToProgress?: () => void;
 }
 
 export const ProfileHub: React.FC<ProfileHubProps> = ({
   onSelectProblem,
   onNavigateToContests,
   onNavigateToProblems,
+  onNavigateToProgress,
 }) => {
   const currentUser = storageService.getCurrentUser();
   const profile = currentUser.studentProfile;
@@ -200,6 +202,16 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({
               </button>
             );
           })}
+
+          {onNavigateToProgress && (
+            <button
+              onClick={onNavigateToProgress}
+              className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+            >
+              <LineChart className="w-3.5 h-3.5" />
+              <span>Bảng Tiến Độ Luyện Thi</span>
+            </button>
+          )}
         </div>
       </div>
 
